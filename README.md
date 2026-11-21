@@ -58,3 +58,123 @@ Related useful links
 - [DD4hep repository](https://github.com/AIDAsoft/DD4hep)
 - [DD4hep User's Manuals](https://dd4hep.web.cern.ch/dd4hep/page/users-manual/)
 - [ACTS DD4hep plugin documentation](https://acts.readthedocs.io/en/latest/plugins/dd4hep.html)
+
+---
+
+## ZDC PbWO4 Crystal Geometry Update
+
+This repository includes the updated PbWO4 crystal geometry for the ZDC crystal calorimeter based on the current preTDR design.
+
+The new geometry uses 2 × 2 × 7 cm PbWO4 crystals in a 30 × 30 array and changes the crystal support material from CarbonFiber to Aluminum.
+
+### Files added
+
+#### `compact/far_forward/ZDC_Crystal_PbWO4_TDR.xml`
+
+- Defines the PbWO4 crystal geometry.
+- Crystal size: 2 × 2 × 7 cm.
+- 30 × 30 crystal array.
+- Support material: Aluminum.
+- Existing position, readout, segmentation, socket configuration, and other unchanged geometry parameters are retained.
+
+#### `configurations/zdc_pbwo4_sipm.yml`
+
+- Adds a dedicated configuration for testing the PbWO4 crystal ZDC together with the existing SiPM-on-tile section.
+- Generates `epic_zdc_pbwo4_sipm.xml` during the build.
+
+### Existing connected files
+
+#### `src/ZDC_Crystal_geo.cpp`
+
+The existing ZDC crystal constructor is used by the new XML.
+
+No modification was required because the existing constructor already reads the crystal material, dimensions, support material, number of cells, socket geometry, and placement information from the XML.
+
+The constructor successfully created the PbWO4 geometry during testing.
+
+#### `compact/far_forward/ZDC_SiPMonTile.xml`
+
+The existing SiPM-on-tile ZDC geometry is used together with the PbWO4 crystal section in the new configuration.
+
+No modification was required.
+
+#### `compact/far_forward/default.xml`
+
+This file currently continues to reference `ZDC_Crystal_LYSO.xml`.
+
+It was intentionally left unchanged so this update does not replace the current default ZDC crystal configuration.
+
+### Generated configuration
+
+The new configuration successfully generates:
+
+`install/share/epic/epic_zdc_pbwo4_sipm.xml`
+
+with the expected includes:
+
+- `ZDC_Crystal_PbWO4_TDR.xml`
+- `ZDC_SiPMonTile.xml`
+
+### Validation
+
+Validation was performed from a fresh clone of the repository to verify that the geometry did not depend on files from the previous working directory.
+
+Verification results:
+
+- Fresh repository clone: PASS
+- Checkout of `zdc-pbwo4-tdr`: PASS
+- CMake configuration: PASS
+- Build/install: PASS
+- `zdc_pbwo4_sipm.yml` configuration generation: PASS
+- Generated `epic_zdc_pbwo4_sipm.xml`: PASS
+- `geoConverter`: PASS
+- DD4hep geometry check: `Nothing to fix`
+- ROOT geometry validation: PASS
+
+`geoConverter` successfully converted:
+
+- `ZDC_Crystal`
+- `HcalFarForwardZDC_SiPMonTile`
+
+and produced:
+
+`test_private_ZDC_PbWO4_config.root`
+
+The resulting geometry contained:
+
+- 2318 nodes
+- 522 volume UIDs
+- Maximum of 901 placements
+
+The DD4hep geometry check reported:
+
+`Nothing to fix`
+
+### ROOT geometry verification
+
+#### `ZDC_Crystal_envelope`
+
+- Material: Air
+- Daughters: 901
+- Size: 60.93 × 60.93 × 9.8 cm
+
+#### `frame_vol`
+
+- Material: Aluminum
+- Daughters: 900
+- Size: 60.93 × 60.93 × 7 cm
+
+#### `tower_vol`
+
+- Material: PbWO4
+- Daughters: 0
+- Size: 2 × 2 × 7 cm
+
+#### `socket_vol`
+
+- Material: ZDC_Polyethylene
+- Daughters: 0
+- Size: 2 × 2 × 0.25 cm
+
+This confirms that the PbWO4 geometry, its dedicated configuration, the existing ZDC crystal constructor, and the SiPM-on-tile geometry work together successfully from a clean repository build.
+
